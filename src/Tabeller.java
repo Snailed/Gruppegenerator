@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 
 /**
@@ -20,25 +19,27 @@ public class Tabeller {
     private JTable gruppeTabel;
     private JPanel panel1;
     private JButton bLavGrupper;
-    private JComboBox comboBox1;
+    private JComboBox cAntalElever;
+    private JComboBox cKlasse;
     private DefaultTableModel tableModel; //Hvis man skal indsætte rækker i en tabel, skal man bruge metoden addrow(string[] values)
 
     //Først bliver main-metoden kørt, som starter konstruktøren.
     public Tabeller() {
 
-        elever = scramble(); //Først læser og blander vi elementerne fra den valgte klasse.
-        System.out.println("Blandede elever: "+elever);  //Den logger vi så vi kan se at den har læst korrekt.
-        opdaterKollonne(); //Nu bliver kollonnenavnene dannet.
+        elever = scramble(); //Først læser og blander vi elementerne fra den valgte klasse. Dem printer vi så ud og opdaterer kollonnetitlerne
+        System.out.println("Blandede elever: "+elever);
+        opdaterKollonne();
 
-        //Hver gang at der bliver klikket "Lav grupper!" bliver denne funktion kaldt.
+        //Hver gang at der bliver klikket "Lav grupper!" bliver denne metode kaldt.
         bLavGrupper.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 opdaterKollonne(); //Dette gøres egentlig bare for at refreshe tabellen.
-                data.clear(); //Først clearer vi lige lister med gammelt data på.
+
+                data.clear(); //Først clearer vi lige lister med gammelt data på. Desuden resetter i lige alt.
                 elever.clear();
-                elever = scramble(); // så læser vi nogle nye elementer og blander dem.
-                stringnr = 0; //Derefter resetter vi hvilken string som vi er nået til.
+                elever = scramble();
+                stringnr = 0;
 
             //Nu prøver vi så at indsætte så mange elever som vi kan ind i tabellen. Når stringnr bliver større end listen med elever skabes der en IndexOutOfBoundsException som så gribes inden at der printes de sidste elementer
             try {
@@ -64,10 +65,10 @@ public class Tabeller {
                 }
             }
         });
-        comboBox1.addActionListener(new ActionListener() { //Når der bliver ændret i antal elever...
+        cAntalElever.addActionListener(new ActionListener() { //Når der bliver ændret i antal elever...
             @Override
             public void actionPerformed(ActionEvent e) {
-                antaleleverprgruppe = Integer.parseInt(comboBox1.getSelectedItem().toString()); //ændrer antal elever per gruppe til det som der står i boxen
+                antaleleverprgruppe = Integer.parseInt(cAntalElever.getSelectedItem().toString()); //ændrer antal elever per gruppe til det som der står i boxen
                 opdaterKollonne(); //Opdaterer kollonnetitlerne
             }
         });
