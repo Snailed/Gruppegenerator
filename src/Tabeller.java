@@ -22,13 +22,21 @@ public class Tabeller {
     private JComboBox cAntalElever;
     private JComboBox cKlasse;
     private DefaultTableModel tableModel; //Hvis man skal indsætte rækker i en tabel, skal man bruge metoden addrow(string[] values)
+    File klassemappe = new File("src/Klasser/");
+    File aktivklasse;
+
 
     //Først bliver main-metoden kørt, som starter konstruktøren.
     public Tabeller() {
+        gruppeTabel.getTableHeader().setReorderingAllowed(false); //Så kan folk ikke rykke rundt på kollonnerne.
 
-        elever = scramble(); //Først læser og blander vi elementerne fra den valgte klasse. Dem printer vi så ud og opdaterer kollonnetitlerne
-        System.out.println("Blandede elever: "+elever);
-        opdaterKollonne();
+        System.out.println("Filer i mappen: "+klassemappe.listFiles()[1]);
+        for (int i = 0; i < klassemappe.listFiles().length; i++) {
+            cKlasse.addItem(klassemappe.listFiles()[i].toString().split("\\\\")[2]);
+        }
+
+
+
 
         //Hver gang at der bliver klikket "Lav grupper!" bliver denne metode kaldt.
         bLavGrupper.addActionListener(new ActionListener() {
@@ -72,6 +80,16 @@ public class Tabeller {
                 opdaterKollonne(); //Opdaterer kollonnetitlerne
             }
         });
+        cKlasse.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                aktivklasse = klassemappe.listFiles()[cKlasse.getSelectedIndex()];
+                bLavGrupper.setEnabled(true);
+                elever = scramble(); //Først læser og blander vi elementerne fra den valgte klasse. Dem printer vi så ud og opdaterer kollonnetitlerne
+                System.out.println("Blandede elever: "+elever);
+                opdaterKollonne();
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -82,6 +100,7 @@ public class Tabeller {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
+
     }
 
     //Her læser den alle elementerne i det pågældende dokument, indsætter det i en liste, hvorefter alle elementer bliver taget ud i tilfælde rækkefølge og puttet i en anden liste som returneres.
@@ -89,7 +108,7 @@ public class Tabeller {
         ArrayList<String> liste = new ArrayList<>(); // Først oprettes listerne
         ArrayList<String> liste2 = new ArrayList<>();
         try {
-            BufferedReader in = new BufferedReader(new FileReader(new File("src/Klasser/Elever.txt"))); // Så opretter vi en reader
+            BufferedReader in = new BufferedReader(new FileReader(aktivklasse)); // Så opretter vi en reader
             String x = in.readLine();
             while(x != null) { // så længe at der bliver læst en linje skal den tilføjes til en liste. Dette ville måske være et godt tidspunkt for et do-while loop men jeg er for doven til at ændre det.
                 liste.add(x);
@@ -112,7 +131,14 @@ public class Tabeller {
         for (int i = 0; i < (int) Math.floor(elever.size()/antaleleverprgruppe);i++) { //For hver gruppe bliver der nu tilføjet et tal til listen
             kollonnenavneliste.add(Integer.toString(i+1));
         }
-        tableModel = new DefaultTableModel(kollonnenavneliste.toArray(),0); //Nu bliver der så lavet en ny tablemodel med de nye kollonnetitlerne på
+        tableModel = new DefaultTableModel(kollonnenavneliste.toArray(),0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { //trick jeg lærte på Stack Overflow for at undgå at man kan ændre i cellerne.
+                return false;
+            }
+        }; //Nu bliver der så lavet en ny tablemodel med de nye kollonnetitlerne på
         gruppeTabel.setModel(tableModel); //...som derefter bliver indsat i tabellen.
     }
+
+
 }
