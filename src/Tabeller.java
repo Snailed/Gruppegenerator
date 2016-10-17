@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -8,19 +9,24 @@ import java.io.FileReader;
 import java.util.ArrayList;
 
 /**
- * Created by Rasmus on 06-10-2016.
+ * Created by Rasmus Hag Løvstad on 06-10-2016.
  */
 public class Tabeller {
     private int antaleleverprgruppe = 1;
     private int stringnr = 0; //bruges til at bedømme hvilken elev som skal indsættes i data-listen.
+    private boolean talBoxAktiveret = false; //Hvis der er blevet ændret i hvor mange elever per gruppe skal denne være true.
     private ArrayList<String> kollonnenavneliste = new ArrayList<>(); //Eftersom at kollonnetitler kun tager stringarrays indsætter vi talene som strings her
     private ArrayList<String> data = new ArrayList<>(); //en arraylist som holder alle de navne som skal til at blive printet ud som en række i tabellen.
     private ArrayList<String> elever = new ArrayList<>(); //Arraylist som først holder alle elementerne læst fra en tekstfil i Klasser-mappen. Den bliver blandet af metoden "scramble()"
     private JTable gruppeTabel;
+    private JTable rækketitler;
     private JPanel panel1;
     private JButton bLavGrupper;
     private JComboBox cAntalElever;
     private JComboBox cKlasse;
+    private JButton bÅbenKlasseMappe;
+    private JScrollPane scrollpane;
+    private JCheckBox bMatrix;
     private DefaultTableModel tableModel; //Hvis man skal indsætte rækker i en tabel, skal man bruge metoden addrow(string[] values)
     File klassemappe = new File("src/Klasser/");
     File aktivklasse;
@@ -28,14 +34,14 @@ public class Tabeller {
 
     //Først bliver main-metoden kørt, som starter konstruktøren.
     public Tabeller() {
+
         gruppeTabel.getTableHeader().setReorderingAllowed(false); //Så kan folk ikke rykke rundt på kollonnerne.
 
-        System.out.println("Filer i mappen: "+klassemappe.listFiles()[1]);
+        System.out.println("Filer i mappen: "+klassemappe.listFiles()[1]); //Tilføj forskellige klasser til comboboxen.
+        cKlasse.addItem(" ");
         for (int i = 0; i < klassemappe.listFiles().length; i++) {
             cKlasse.addItem(klassemappe.listFiles()[i].toString().split("\\\\")[2]);
         }
-
-
 
 
         //Hver gang at der bliver klikket "Lav grupper!" bliver denne metode kaldt.
@@ -76,18 +82,53 @@ public class Tabeller {
         cAntalElever.addActionListener(new ActionListener() { //Når der bliver ændret i antal elever...
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (!talBoxAktiveret) {
+                    cAntalElever.removeItemAt(0);
+                    talBoxAktiveret = true;
+                }
                 antaleleverprgruppe = Integer.parseInt(cAntalElever.getSelectedItem().toString()); //ændrer antal elever per gruppe til det som der står i boxen
                 opdaterKollonne(); //Opdaterer kollonnetitlerne
             }
         });
-        cKlasse.addActionListener(new ActionListener() {
+        cKlasse.addActionListener(new ActionListener() { // Når man benytter programmet skal man først vælge klasse inden man kan blande grupper.
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (!bLavGrupper.isEnabled()) {
+                    cKlasse.removeItemAt(0);
+                }
                 aktivklasse = klassemappe.listFiles()[cKlasse.getSelectedIndex()];
-                bLavGrupper.setEnabled(true);
-                elever = scramble(); //Først læser og blander vi elementerne fra den valgte klasse. Dem printer vi så ud og opdaterer kollonnetitlerne
-                System.out.println("Blandede elever: "+elever);
-                opdaterKollonne();
+                if (talBoxAktiveret) {
+                    bLavGrupper.setEnabled(true);
+                    elever = scramble();
+                    System.out.println("Blandede elever: " + elever);
+                    opdaterKollonne();
+                }
+            }
+        });
+        bÅbenKlasseMappe.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Desktop.getDesktop().open(klassemappe);
+                } catch (Exception e3) {
+                    e3.printStackTrace();
+                }
+
+            }
+        });
+        bMatrix.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (bMatrix.isSelected()) {
+                    rækketitler = new RowNumberTable(gruppeTabel);
+                    scrollpane.setRowHeaderView(rækketitler);
+                    scrollpane.setCorner(JScrollPane.UPPER_LEFT_CORNER, rækketitler.getTableHeader());
+                } else {
+                    rækketitler = null;
+                    scrollpane.setRowHeaderView(null);
+
+                }
+
             }
         });
     }
@@ -95,7 +136,7 @@ public class Tabeller {
     public static void main(String[] args) {
         //Først laver vi et vindue og opretter et anonymt objekt af selve klassen. Derefter bliver konstruktøren kaldt.
 
-        JFrame frame = new JFrame("Matrix");
+        JFrame frame = new JFrame("Gruppegenerator");
         frame.setContentPane(new Tabeller().panel1);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
