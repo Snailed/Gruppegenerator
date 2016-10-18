@@ -15,6 +15,7 @@ public class Tabeller {
     private int antaleleverprgruppe = 1;
     private int stringnr = 0; //bruges til at bedømme hvilken elev som skal indsættes i data-listen.
     private boolean talBoxAktiveret = false; //Hvis der er blevet ændret i hvor mange elever per gruppe skal denne være true.
+    private char[] bogstaver = new char[] {'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
     private ArrayList<String> kollonnenavneliste = new ArrayList<>(); //Eftersom at kollonnetitler kun tager stringarrays indsætter vi talene som strings her
     private ArrayList<String> data = new ArrayList<>(); //en arraylist som holder alle de navne som skal til at blive printet ud som en række i tabellen.
     private ArrayList<String> elever = new ArrayList<>(); //Arraylist som først holder alle elementerne læst fra en tekstfil i Klasser-mappen. Den bliver blandet af metoden "scramble()"
@@ -88,6 +89,12 @@ public class Tabeller {
                 }
                 antaleleverprgruppe = Integer.parseInt(cAntalElever.getSelectedItem().toString()); //ændrer antal elever per gruppe til det som der står i boxen
                 opdaterKollonne(); //Opdaterer kollonnetitlerne
+                if (aktivklasse != null) {
+                    bLavGrupper.setEnabled(true);
+                    elever = scramble();
+                    System.out.println("Blandede elever: " + elever);
+                    opdaterKollonne();
+                }
             }
         });
         cKlasse.addActionListener(new ActionListener() { // Når man benytter programmet skal man først vælge klasse inden man kan blande grupper.
@@ -169,8 +176,8 @@ public class Tabeller {
     }
     public void opdaterKollonne() {
         kollonnenavneliste.clear(); //Først clearer den listen med kollonnetitler i tilfælde at metoden er blevet kaldt før.
-        for (int i = 0; i < (int) Math.floor(elever.size()/antaleleverprgruppe);i++) { //For hver gruppe bliver der nu tilføjet et tal til listen
-            kollonnenavneliste.add(Integer.toString(i+1));
+        for (int i = 0; i < (int) Math.floor(elever.size()/antaleleverprgruppe);i++) { //For hver gruppe bliver der nu tilføjet et bogstav til listen
+            kollonnenavneliste.add(Character.toString(bogstaver[i]));
         }
         tableModel = new DefaultTableModel(kollonnenavneliste.toArray(),0) {
             @Override
