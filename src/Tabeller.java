@@ -3,6 +3,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -28,8 +30,10 @@ public class Tabeller {
     private JButton bÅbenKlasseMappe;
     private JScrollPane scrollpane;
     private JCheckBox bMatrix;
+    private JButton redigerEleverButton;
     private DefaultTableModel tableModel; //Hvis man skal indsætte rækker i en tabel, skal man bruge metoden addrow(string[] values)
-    File klassemappe = new File("src/Klasser/");
+    private boolean klasseAktiv = false; //Sættes til true så snart at der er valgt en klasse
+    File klassemappe = new File("Klasser/");
     File aktivklasse;
 
 
@@ -41,7 +45,7 @@ public class Tabeller {
         System.out.println("Filer i mappen: "+klassemappe.listFiles()[1]); //Tilføj forskellige klasser til comboboxen.
         cKlasse.addItem(" ");
         for (int i = 0; i < klassemappe.listFiles().length; i++) {
-            cKlasse.addItem(klassemappe.listFiles()[i].toString().split("\\\\")[2]);
+            cKlasse.addItem(klassemappe.listFiles()[i].toString().split("\\\\")[1]);
         }
 
 
@@ -100,7 +104,7 @@ public class Tabeller {
         cKlasse.addActionListener(new ActionListener() { // Når man benytter programmet skal man først vælge klasse inden man kan blande grupper.
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!bLavGrupper.isEnabled()) {
+                if (!klasseAktiv) {
                     cKlasse.removeItemAt(0);
                 }
                 aktivklasse = klassemappe.listFiles()[cKlasse.getSelectedIndex()];
@@ -109,7 +113,10 @@ public class Tabeller {
                     elever = scramble();
                     System.out.println("Blandede elever: " + elever);
                     opdaterKollonne();
+
                 }
+                klasseAktiv = true;
+                redigerEleverButton.setEnabled(true);
             }
         });
         bÅbenKlasseMappe.addActionListener(new ActionListener() {
@@ -136,6 +143,40 @@ public class Tabeller {
 
                 }
 
+            }
+        });
+        redigerEleverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFrame elevFrame = new JFrame("Redigér elever...");
+                System.out.println("Aktivklasse: "+aktivklasse);
+                elevFrame.setContentPane(new RedigerElever(aktivklasse).panel1);
+                elevFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                elevFrame.pack();
+                elevFrame.setVisible(true);
+                elevFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosing(WindowEvent e) {
+
+                        if (RedigerElever.ændret) {
+                            int janej = JOptionPane.showConfirmDialog(elevFrame,"Vil du gemme dine ændringer?","Vil du virkelig lukke vinduet?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                            if (janej == 1) {
+                                elevFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                            }
+                            if (janej == 0) {
+                                RedigerElever.printFromTableModel();
+                                elevFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                            }
+                            if (janej == 2) {
+                                elevFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                            }
+                            System.out.println("Ændret? "+RedigerElever.ændret+", janej?"+janej);
+                            RedigerElever.ændret = false;
+                        }
+
+                    }
+
+                });
             }
         });
     }
